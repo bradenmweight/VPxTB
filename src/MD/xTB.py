@@ -8,7 +8,6 @@ def make_XYZ( LABELS, POS ):
     FILE01.write("%1.0f\n" % len(LABELS))
     FILE01.write("Title Line\n")
     for at in range( len(LABELS) ):
-        #FILE01.write( "%s %1.5f %1.5f %1.5f" % (LABELS[at], POS[at,0], POS[at,1], POS[at,2]) ) # Already in Bohr
         FILE01.write( "%s %1.5f %1.5f %1.5f" % (LABELS[at], POS[at,0]*0.529, POS[at,1]*0.529, POS[at,2]*0.529) ) # Already in Bohr
         if ( not at == len(LABELS)-1 ):
             FILE01.write("\n")
@@ -40,7 +39,7 @@ def get_numerical_gradient( LABELS, COORDS ):
                 sp.call("xtb geometry.xyz > xtb.out", shell=True)
                 # Extract new dipole
                 sp.call("grep 'molecular dipole' xtb.out -A 3 | tail -n 1 | awk '{print $2, $3, $4}' > DIPOLE.dat", shell=True)
-                DIP_NUM[at,d,pm,:] = np.loadtxt("DIPOLE.dat") # (dx,dy,dz)
+                DIP_NUM[at,d,pm,:] = np.loadtxt("DIPOLE.dat") / 2.5 # (dx,dy,dz) # Debye --> a.u.
             # Central difference
             DIP_GRAD[at,d,:] = (DIP_NUM[at,d,1,:] - DIP_NUM[at,d,0,:]) / 2 / dR_num # (dx,dy,dz)
     return DIP_GRAD
@@ -63,7 +62,7 @@ def get_numerical_gradient_parallel( at, Atom_labels, COORDS ):
             sp.call("xtb geometry.xyz > xtb.out", shell=True)
             # Extract new dipole
             sp.call("grep 'molecular dipole' xtb.out -A 3 | tail -n 1 | awk '{print $2, $3, $4}' > DIPOLE.dat", shell=True)
-            DIP_NUM[d,pm,:] = np.loadtxt("DIPOLE.dat") # (dx,dy,dz)
+            DIP_NUM[d,pm,:] = np.loadtxt("DIPOLE.dat") / 2.5 # (dx,dy,dz) # Debye --> a.u.
         # Central difference
         DIP_GRAD[d,:] = (DIP_NUM[d,1,:] - DIP_NUM[d,0,:]) / 2 / dR_num # (dx,dy,dz)
     
@@ -89,7 +88,7 @@ def get_Properties( DYN_PROPERTIES ):
 
     # Get GS dipole
     sp.call("grep 'molecular dipole' xtb.out -A 3 | tail -n 1 | awk '{print $2, $3, $4}' > DIPOLE.dat", shell=True)
-    DYN_PROPERTIES["DIPOLE"] = np.loadtxt("DIPOLE.dat")
+    DYN_PROPERTIES["DIPOLE"] = np.loadtxt("DIPOLE.dat") / 2.5 # Debye --> a.u.
 
 
     # Get GS dipole gradient -- numerical gradient is expensive

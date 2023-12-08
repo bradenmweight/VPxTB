@@ -48,10 +48,10 @@ def main( ):
 
         # Remove COM motion and angular velocity
         # Do we need to do this at every step ? Probably should at least remove COM.
-        if ( DYN_PROPERTIES["REMOVE_COM_MOTION"] == True ):
-            DYN_PROPERTIES = rotation.shift_COM(DYN_PROPERTIES)
-        if ( DYN_PROPERTIES["REMOVE_ANGULAR_VELOCITY"] == True ):
-            DYN_PROPERTIES = rotation.remove_rotations(DYN_PROPERTIES)
+        # if ( DYN_PROPERTIES["REMOVE_COM_MOTION"] == True ):
+        #     DYN_PROPERTIES = rotation.shift_COM(DYN_PROPERTIES)
+        # if ( DYN_PROPERTIES["REMOVE_ANGULAR_VELOCITY"] == True ):
+        #     DYN_PROPERTIES = rotation.remove_rotations(DYN_PROPERTIES)
 
         if ( DYN_PROPERTIES["MD_STEP"] % DYN_PROPERTIES["DATA_SAVE_FREQ"]  == 0 ):
             output.save_data(DYN_PROPERTIES)
