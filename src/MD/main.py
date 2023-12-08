@@ -5,6 +5,7 @@ from time import time
 
 import read_input
 import nuclear_propagation
+import polariton
 import output
 import rotation
 import xTB
@@ -15,10 +16,10 @@ def main( ):
 
     # Remove COM motion and angular velocity
     # Do we need to do this at every step. Probably should at least remove COM.
-    if ( DYN_PROPERTIES["REMOVE_COM_MOTION"] == True ):
-        DYN_PROPERTIES = rotation.shift_COM(DYN_PROPERTIES)
-    if ( DYN_PROPERTIES["REMOVE_ANGULAR_VELOCITY"] == True ):
-        DYN_PROPERTIES = rotation.remove_rotations(DYN_PROPERTIES)
+    #if ( DYN_PROPERTIES["REMOVE_COM_MOTION"] == True ):
+    #    DYN_PROPERTIES = rotation.shift_COM(DYN_PROPERTIES)
+    #if ( DYN_PROPERTIES["REMOVE_ANGULAR_VELOCITY"] == True ):
+    #    DYN_PROPERTIES = rotation.remove_rotations(DYN_PROPERTIES)
 
     # Perform first electronic structure calculation
         # Get diagonal energies and gradients
@@ -31,8 +32,9 @@ def main( ):
         T_STEP_START = time()
         #print(f"Working on step {step} of { DYN_PROPERTIES['NSteps'] }")
 
-        # Propagate nuclear coordinates
-        DYN_PROPERTIES = nuclear_propagation.Nuclear_X_Step(DYN_PROPERTIES)
+        DYN_PROPERTIES = nuclear_propagation.Nuclear_X_Step(DYN_PROPERTIES) # Propagate nuclear coordinates
+        if ( DYN_PROPERTIES["do_POLARITON"] ): 
+            DYN_PROPERTIES = polariton.propagate_Polariton( DYN_PROPERTIES ) # Propagate polariton coordinates (QC and PC)
 
         # Perform jth electronic structure calculation
             # Get diagonal energies and grad

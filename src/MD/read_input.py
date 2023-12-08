@@ -2,6 +2,8 @@ import numpy as np
 import subprocess as sp
 import os
 
+import polariton
+
 def read():
 
     DYN_PROPERTIES = {} # Everything will come from here
@@ -129,14 +131,10 @@ def read():
 
             # Look for do_POLARITON
             if ( t[0].upper() == "do_POLARITON".upper() ):
-                try:
-                    if ( t[1].lower() in ["true", "1"] ):
-                        DYN_PROPERTIES["do_POLARITON"] = True
-                    else:
-                        DYN_PROPERTIES["do_POLARITON"] = False
-                except:
-                    print(f"\t'do_POLARITON' must be provided.")
-                    exit()
+                if ( t[1].lower() in ["true", "1"] ):
+                    DYN_PROPERTIES["do_POLARITON"] = True
+                else:
+                    DYN_PROPERTIES["do_POLARITON"] = False
             
             # Look for A0
             if ( t[0].upper() == "A0".upper() ):
@@ -178,6 +176,7 @@ def read():
         print( "  CHARGE ="); print("\t\t", DYN_PROPERTIES["CHARGE"] )
         print( "  MD_ENSEMBLE ="); print("\t\t", DYN_PROPERTIES["MD_ENSEMBLE"] )
         print( "  VELOC ="); print("\t\t", DYN_PROPERTIES["VELOC"] )
+        print( "  do_POLARITON ="); print("\t\t", DYN_PROPERTIES["do_POLARITON"] )
         print( "  A0 ="); print("\t\t", DYN_PROPERTIES["A0"], "a.u." )
         print( "  WC ="); print("\t\t", DYN_PROPERTIES["WC_eV"], "eV" )
     except KeyError:
@@ -367,9 +366,6 @@ def initialize_MD_variables(DYN_PROPERTIES):
     DYN_PROPERTIES["MASSES"] = set_masses(DYN_PROPERTIES["Atom_labels"])
     DYN_PROPERTIES["Atom_velocs_new"] = get_initial_velocs(DYN_PROPERTIES)
 
-    
-
-
     try:
         tmp = DYN_PROPERTIES["NCPUS"]
     except KeyError:
@@ -388,12 +384,16 @@ def initialize_MD_variables(DYN_PROPERTIES):
     try:
         tmp = DYN_PROPERTIES["do_POLARITON"]
     except KeyError:
-        DYN_PROPERTIES["do_POLARITON"] = False # Set to Flase by default
+        print( "XXXXXXXXXXXXXXXXXXXXXX" )
+        DYN_PROPERTIES["do_POLARITON"] = False # Set to False by default
+    if ( DYN_PROPERTIES["do_POLARITON"] == True ):
+        DYN_PROPERTIES = polariton.initialize_Cavity( DYN_PROPERTIES )
+
 
     try:
         tmp = DYN_PROPERTIES["PARALLEL_GRADIENT"]
     except KeyError:
-        DYN_PROPERTIES["PARALLEL_GRADIENT"] = False # Set to Flase by default
+        DYN_PROPERTIES["PARALLEL_GRADIENT"] = False # Set to False by default
 
 
     if ( DYN_PROPERTIES["MD_ENSEMBLE"] == "NVT" ):

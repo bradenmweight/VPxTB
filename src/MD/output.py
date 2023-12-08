@@ -56,7 +56,14 @@ def save_data(DYN_PROPERTIES):
         file01.write(f"{TIME}  " + "%2.4f\n" % (T))
 
     with open("MD_OUTPUT/Dipole.dat","a") as file01:
-        file01.write(f"{TIME}  " + "%2.6f\n" % (DYN_PROPERTIES["DIPOLE"]))
+        MU = DYN_PROPERTIES["DIPOLE"]
+        file01.write(f"{TIME}  " + "%2.6f %2.6f %2.6f\n" % (MU[0], MU[1], MU[2]))
 
-
-
+    if ( DYN_PROPERTIES["do_POLARITON"] == True ):
+        with open("MD_OUTPUT/QC.dat","a") as file01:
+            QC = DYN_PROPERTIES["QC"]
+            file01.write(f"{TIME}  " + "%2.6f\n" % (QC))
+        
+        with open("MD_OUTPUT/PC.dat","a") as file01:
+            PC = DYN_PROPERTIES["PC"]
+            file01.write(f"{TIME}  " + "%2.6f\n" % (PC))

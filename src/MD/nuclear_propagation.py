@@ -6,15 +6,17 @@ from polariton import get_Polariton_Force
 
 
 def get_Force( DYN_PROPERTIES ):
-    FORCE  = np.zeros( (DYN_PROPERTIES["NAtoms"], 3) )
+    print("FOUND FORCE FUNCTION", DYN_PROPERTIES["do_POLARITON"])
+    FORCE   = np.zeros( (DYN_PROPERTIES["NAtoms"], 3) )
     Fel     = -1 * DYN_PROPERTIES["GRAD_NEW"] # Electronic Force
-    Fph     = get_Polariton_Force( DYN_PROPERTIES ) # Dipole Force
-    FORCE += Fel
-    FORCE += Fph
-    DYN_PROPERTIES["FORCE_NEW"] = FORCE
+    FORCE  += Fel
     if ( DYN_PROPERTIES["do_POLARITON"] == True ):
+        print("ADDING DIPOLE FORCE TO ELECTRONIC FORCE")
+        Fph     = get_Polariton_Force( DYN_PROPERTIES ) # Dipole Force
+        FORCE  += Fph
         print("\tEl. Force |Fel|: %1.6f" % np.linalg.norm(Fel))
         print("\tEl-Ph. Force |Fph|: %1.6f" % np.linalg.norm(Fph))
+    DYN_PROPERTIES["FORCE_NEW"] = FORCE
     return DYN_PROPERTIES
 
 
