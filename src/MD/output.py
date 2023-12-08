@@ -55,5 +55,8 @@ def save_data(DYN_PROPERTIES):
         T = properties.compute_Temperature(DYN_PROPERTIES) # k
         file01.write(f"{TIME}  " + "%2.4f\n" % (T))
 
+    with open("MD_OUTPUT/Dipole.dat","a") as file01:
+        file01.write(f"{TIME}  " + "%2.6f\n" % (DYN_PROPERTIES["DIPOLE"]))
+
 
 
