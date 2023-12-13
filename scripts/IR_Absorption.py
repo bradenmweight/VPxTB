@@ -1,5 +1,6 @@
 import numpy as np
 from matplotlib import pyplot as plt
+from scipy.signal import find_peaks
 
 from emcee.autocorr import function_1d as get_ACF
 
@@ -26,13 +27,14 @@ MU = get_ACF( MU )
 plt.plot( TIME, MU )
 plt.xlabel("Lag Time (fs)", fontsize=15)
 plt.ylabel("Auto-correlation Function", fontsize=15)
-plt.xlim( 0, 500 )
+#plt.xlim( 0, 2000 )
+plt.xlim( 0 )
 plt.tight_layout()
 plt.savefig("Dipole_ACF.jpg", dpi=300)
 plt.clf()
 
 #### NUMERICAL FOURIER KERNEL ####
-Nw       = 401
+Nw       = 10001
 wmin     = 0.    # 0.    # meV
 wmax     = 400   # 400.  # meV
 MU_w     = np.zeros( (Nw), dtype=complex )
@@ -51,18 +53,23 @@ for wi in range(Nw):
     MU_w[wi] = 2*np.sum(int_func)
 MU_w *= dw / np.sqrt(2 * np.pi)
 
+# FIND THE PEAKS
+THRESHOLD = np.max( np.real(MU_w) ) / 50
+PEAKS, _  = find_peaks(np.real(MU_w), height=THRESHOLD)
+w_cm = w_meV * 8.065610 # cm^-1 / meV
+np.savetxt( f"IR_SPEC.dat", np.c_[w_meV, w_cm, np.real(MU_w)], fmt="%1.5f", header="w(meV)    w(cm-1)    IR" )
+np.savetxt( f"IR_SPEC_PEAKS.dat", np.c_[w_meV[PEAKS], w_cm[PEAKS], np.real(MU_w)[PEAKS] ], fmt="%1.5f", header="w_max(meV)    w_max(cm-1)    IR_max" )
+
 
 if ( UNITS == "cm-1" ):
     w_cm = w_meV * 8.065610 # cm^-1 / meV
-    #plt.plot( w_cm, np.abs(np.real(MU_w)), "-", c='black', label="RE" )
-    #plt.plot( w_cm, np.abs(np.imag(MU_w)), "-", c='red',   label="IM" )
     plt.plot( w_cm, np.real(MU_w), "-", c='black', label="RE" )
-    plt.plot( w_cm, np.imag(MU_w), "-", c='red',   label="IM" )
+    #plt.plot( w_cm, np.imag(MU_w), "-", c='red',   label="IM" )
     plt.xlim(w_cm[0],w_cm[-1])
     plt.xlabel("Energy (cm$^{-1}$)", fontsize=15)
 elif ( UNITS == "meV" ):
-    plt.plot( w_meV, np.abs(np.real(MU_w)), "-",  c='black', label="RE" )
-    plt.plot( w_meV, np.abs(np.imag(MU_w)), "-",  c='red',   label="IM" )
+    plt.plot( w_meV, np.real(MU_w), "-",  c='black', label="RE" )
+    #plt.plot( w_meV, np.imag(MU_w), "-",  c='red',   label="IM" )
     plt.xlim(w_meV[0],w_meV[-1])
     plt.xlabel("Energy (meV)", fontsize=15)
 else:
@@ -70,6 +77,14 @@ else:
     exit()
 
 plt.ylabel("Absoprtion (Arb. Units)", fontsize=15)
-plt.legend()
+#plt.legend()
 plt.tight_layout()
-plt.savefig("IR_SPEC.jpg", dpi=300)
+plt.savefig(f"IR_SPEC_{UNITS}.jpg", dpi=300)
+plt.clf()
+
+
+
+
+
+
+
