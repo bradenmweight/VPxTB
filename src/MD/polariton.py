@@ -18,7 +18,7 @@ def get_Polariton_Energy( DYN_PROPERTIES ):
     E  = 0.0
     E += 0.500 * WC**2 * QC**2 # This term dies becuse <0|qc|0> = 0
     E += np.sqrt(2 * WC**3) * A0 * DIP * QC # This term dies becuse <0|qc|0> = 0
-    #E += WC * A0**2 * DIP**2
+    E += WC * A0**2 * DIP**2
 
     return E
 
@@ -47,7 +47,7 @@ def get_Polariton_Force( DYN_PROPERTIES ):
     # Cavity Born-Oppenheimer Gradient
     FORCE    = np.zeros( (len(DIP_GRAD),3) ) # N,3
     FORCE   += -1 * np.sqrt(2 * WC**3) * A0 * DIP_GRAD[:,:] * QC # The direct coupling term dies because <0|qc|0> = 0, unless we do cavity BO approximation
-    #FORCE   += -1 * WC * A0**2 * (DIP_GRAD[:,:] * DIP + DIP * DIP_GRAD[:,:] ) # Chain Rule
+    FORCE   += -1 * WC * A0**2 * (DIP_GRAD[:,:] * DIP + DIP * DIP_GRAD[:,:] ) # Chain Rule
     return FORCE
 
 def propagate_Polariton( DYN_PROPERTIES ):
@@ -68,7 +68,7 @@ def propagate_Polariton( DYN_PROPERTIES ):
     DIP      = np.einsum( "e,e->", DIP, EPOL ) # 1
 
     ESTEPS = 1000
-    dtE    = dtI / 1000
+    dtE    = dtI / ESTEPS
     for step in range( ESTEPS ):
         QC       += 0.500 * dtE * PC
         FORCE     = -1 * ( WC**2 * QC + np.sqrt(2 * WC**3) * A0 * DIP )
@@ -84,8 +84,23 @@ def propagate_Polariton( DYN_PROPERTIES ):
 
 def initialize_Cavity(DYN_PROPERTIES):
     # Sample QC and PC from Gaussian
-    WC = DYN_PROPERTIES["WC_AU"]
-    DYN_PROPERTIES["QC"] = random.gauss( 0, 1/np.sqrt(WC) )
-    DYN_PROPERTIES["PC"] = 0
+    A0   = DYN_PROPERTIES["A0"]
+    WC   = DYN_PROPERTIES["WC_AU"]
+    DIP  = DYN_PROPERTIES["DIPOLE"] # 3
+    EPOL = DYN_PROPERTIES["EPOL"] # 3
+    DIP  = np.einsum( "e,e->", DIP, EPOL ) # 1
+    
+    T    = 300               # K
+    kBT  = T * (0.025 / 300) # K --> eV
+    kBT /= 27.2114           # eV --> a.u.
+    #beta = 315774 / T # 1/K --> 1/a.u. --- from Sebastian
+    beta = 1/kBT
+    QC0  = -np.sqrt(2/WC) * A0 * DIP
+    DYN_PROPERTIES["QC"] = random.gauss( QC0, np.sqrt(1/beta * WC**2) )
+    DYN_PROPERTIES["PC"] = random.gauss( 0, np.sqrt(1/beta) )
+
+    #print("WC, QC0, QC, PC, MU:", WC, QC0, DYN_PROPERTIES["QC"], DYN_PROPERTIES["PC"], DIP )
+    #print("Photon Energy:", 0.500 * DYN_PROPERTIES["QC"]**2 * WC**2 + 0.500 * DYN_PROPERTIES["PC"]**2 )
+    #exit()
     return DYN_PROPERTIES
 
