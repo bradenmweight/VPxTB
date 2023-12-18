@@ -384,10 +384,10 @@ def initialize_MD_variables(DYN_PROPERTIES):
     try:
         tmp = DYN_PROPERTIES["do_POLARITON"]
     except KeyError:
-        print( "XXXXXXXXXXXXXXXXXXXXXX" )
         DYN_PROPERTIES["do_POLARITON"] = False # Set to False by default
-    if ( DYN_PROPERTIES["do_POLARITON"] == True ):
-        DYN_PROPERTIES = polariton.initialize_Cavity( DYN_PROPERTIES )
+    ### MOVED THIS TO SOMEWHERE ELSE ###
+    #if ( DYN_PROPERTIES["do_POLARITON"] == True ):
+    #    DYN_PROPERTIES = polariton.initialize_Cavity( DYN_PROPERTIES )
 
 
     try:

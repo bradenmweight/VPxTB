@@ -24,6 +24,9 @@ def main( ):
     # Perform first electronic structure calculation
         # Get diagonal energies and gradients
     DYN_PROPERTIES = xTB.main(DYN_PROPERTIES)
+    # Initialize photon based on moolecular dipole. We have dipole here.
+    if ( DYN_PROPERTIES["do_POLARITON"] == True ):
+        DYN_PROPERTIES = polariton.initialize_Cavity( DYN_PROPERTIES )
     
     output.save_data(DYN_PROPERTIES)
 
