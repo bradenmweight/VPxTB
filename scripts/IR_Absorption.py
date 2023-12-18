@@ -16,7 +16,7 @@ T    = TIME[-1] - TIME[0]
 # PLOT DIPOLE TIME SERIES
 plt.plot( TIME, MU )
 plt.xlabel("Time (fs)", fontsize=15)
-plt.ylabel("Dipole (Debye)", fontsize=15)
+plt.ylabel("Dipole (a.u.)", fontsize=15)
 plt.xlim( 0, 500 )
 plt.tight_layout()
 plt.savefig("Dipole.jpg", dpi=300)
@@ -103,7 +103,7 @@ T    = TIME[-1] - TIME[0]
 # PLOT DIPOLE TIME SERIES
 plt.plot( TIME, QC )
 plt.xlabel("Time (fs)", fontsize=15)
-plt.ylabel("Dipole (Debye)", fontsize=15)
+plt.ylabel("Photon Position (a.u.)", fontsize=15)
 plt.xlim( 0, 500 )
 plt.tight_layout()
 plt.savefig("QC.jpg", dpi=300)
