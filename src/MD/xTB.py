@@ -25,7 +25,7 @@ def run_xTB_SinglePoint( DYN_PROPERTIES ):
 def get_numerical_gradient( LABELS, COORDS ):
     NATOMS = len(LABELS)
     dR_num = 0.01
-    DIP_NUM  = np.zeros( (NATOMS,3,2,3) ) # Forward/backward, (dx,dy,dz)
+    DIP_NUM  = np.zeros( (NATOMS,3,2,3) ) # Forward/backward, (MUx,MUy,MUz)
     DIP_GRAD = np.zeros( (NATOMS,3,3) )
     for at in range( NATOMS ):
         for d in range( 3 ):
@@ -39,7 +39,7 @@ def get_numerical_gradient( LABELS, COORDS ):
                 sp.call("xtb geometry.xyz > xtb.out", shell=True)
                 # Extract new dipole
                 sp.call("grep 'molecular dipole' xtb.out -A 3 | tail -n 1 | awk '{print $2, $3, $4}' > DIPOLE.dat", shell=True)
-                DIP_NUM[at,d,pm,:] = np.loadtxt("DIPOLE.dat") / 2.5 # (dx,dy,dz) # Debye --> a.u.
+                DIP_NUM[at,d,pm,:] = np.loadtxt("DIPOLE.dat") #/ 2.5 # (dx,dy,dz) # ALREADY IN a.u.
             # Central difference
             DIP_GRAD[at,d,:] = (DIP_NUM[at,d,1,:] - DIP_NUM[at,d,0,:]) / 2 / dR_num # (dx,dy,dz)
     return DIP_GRAD
@@ -62,7 +62,7 @@ def get_numerical_gradient_parallel( at, Atom_labels, COORDS ):
             sp.call("xtb geometry.xyz > xtb.out", shell=True)
             # Extract new dipole
             sp.call("grep 'molecular dipole' xtb.out -A 3 | tail -n 1 | awk '{print $2, $3, $4}' > DIPOLE.dat", shell=True)
-            DIP_NUM[d,pm,:] = np.loadtxt("DIPOLE.dat") / 2.5 # (dx,dy,dz) # Debye --> a.u.
+            DIP_NUM[d,pm,:] = np.loadtxt("DIPOLE.dat") #/ 2.5 # (dx,dy,dz) # ALREADY IN a.u.
         # Central difference
         DIP_GRAD[d,:] = (DIP_NUM[d,1,:] - DIP_NUM[d,0,:]) / 2 / dR_num # (dx,dy,dz)
     
@@ -88,7 +88,7 @@ def get_Properties( DYN_PROPERTIES ):
 
     # Get GS dipole
     sp.call("grep 'molecular dipole' xtb.out -A 3 | tail -n 1 | awk '{print $2, $3, $4}' > DIPOLE.dat", shell=True)
-    DYN_PROPERTIES["DIPOLE"] = np.loadtxt("DIPOLE.dat") / 2.5 # Debye --> a.u.
+    DYN_PROPERTIES["DIPOLE"] = np.loadtxt("DIPOLE.dat") #/ 2.5 # (dx,dy,dz) # ALREADY IN a.u.
 
 
     # Get GS dipole gradient -- numerical gradient is expensive
