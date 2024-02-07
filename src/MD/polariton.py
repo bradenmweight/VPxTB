@@ -96,8 +96,8 @@ def initialize_Cavity(DYN_PROPERTIES):
     #beta = 315774 / T # 1/K --> 1/a.u. --- from Sebastian
     beta = 1/kBT
     QC0  = -np.sqrt(2/WC) * A0 * DIP
-    DYN_PROPERTIES["QC"] = random.gauss( QC0, np.sqrt(1/beta * WC**2) )
-    DYN_PROPERTIES["PC"] = random.gauss( 0, np.sqrt(1/beta) )
+    DYN_PROPERTIES["QC"] = QC0#random.gauss( QC0, np.sqrt(1/beta * WC**2) )
+    DYN_PROPERTIES["PC"] = 0#random.gauss( 0, np.sqrt(1/beta) )
 
     #print("WC, QC0, QC, PC, MU:", WC, QC0, DYN_PROPERTIES["QC"], DYN_PROPERTIES["PC"], DIP )
     #print("Photon Energy:", 0.500 * DYN_PROPERTIES["QC"]**2 * WC**2 + 0.500 * DYN_PROPERTIES["PC"]**2 )

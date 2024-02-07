@@ -17,7 +17,7 @@ T    = TIME[-1] - TIME[0]
 plt.plot( TIME, MU )
 plt.xlabel("Time (fs)", fontsize=15)
 plt.ylabel("Dipole (a.u.)", fontsize=15)
-plt.xlim( 0, 500 )
+plt.xlim( 0 )
 plt.tight_layout()
 plt.savefig("Dipole.jpg", dpi=300)
 plt.clf()
@@ -62,7 +62,6 @@ np.savetxt( f"IR_SPEC_PEAKS.dat", np.c_[w_meV[PEAKS], w_cm[PEAKS], np.real(MU_w)
 
 
 if ( UNITS == "cm-1" ):
-    w_cm = w_meV * 8.065610 # cm^-1 / meV
     plt.plot( w_cm, np.real(MU_w), "-", c='black', label="RE" )
     #plt.plot( w_cm, np.imag(MU_w), "-", c='red',   label="IM" )
     plt.xlim(w_cm[0],w_cm[-1])
@@ -104,7 +103,7 @@ T    = TIME[-1] - TIME[0]
 plt.plot( TIME, QC )
 plt.xlabel("Time (fs)", fontsize=15)
 plt.ylabel("Photon Position (a.u.)", fontsize=15)
-plt.xlim( 0, 500 )
+plt.xlim( 0 )
 plt.tight_layout()
 plt.savefig("QC.jpg", dpi=300)
 plt.clf()
@@ -144,7 +143,6 @@ np.savetxt( f"QC_SPEC_PEAKS.dat", np.c_[w_meV[PEAKS], w_cm[PEAKS], np.real(QC_w)
 
 
 if ( UNITS == "cm-1" ):
-    w_cm = w_meV * 8.065610 # cm^-1 / meV
     plt.plot( w_cm, np.real(QC_w), "-", c='black', label="RE" )
     #plt.plot( w_cm, np.imag(QC_w), "-", c='red',   label="IM" )
     plt.xlim(w_cm[0],w_cm[-1])
