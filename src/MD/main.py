@@ -9,6 +9,7 @@ import polariton
 import output
 import rotation
 import xTB
+import Hessian
 
 def main( ):
     DYN_PROPERTIES = read_input.read()
