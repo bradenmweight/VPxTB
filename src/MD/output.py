@@ -1,5 +1,6 @@
 import numpy as np
 import subprocess as sp
+import os
 
 import properties
 
@@ -8,7 +9,8 @@ def save_data(DYN_PROPERTIES):
     TIME    = round(DYN_PROPERTIES["MD_STEP"] * DYN_PROPERTIES["dtI"] / 41.341 ,4) # Print in fs
 
     if ( DYN_PROPERTIES["MD_STEP"] == 0 ):
-        sp.call("rm -r MD_OUTPUT", shell=True)
+        if ( os.path.exists("MD_OUTPUT") ): 
+            sp.call("rm -r MD_OUTPUT", shell=True)
         sp.call("mkdir MD_OUTPUT", shell=True)
 
     with open("MD_OUTPUT/trajectory.xyz","a") as file01:
@@ -67,3 +69,22 @@ def save_data(DYN_PROPERTIES):
         with open("MD_OUTPUT/PC.dat","a") as file01:
             PC = DYN_PROPERTIES["PC"]
             file01.write(f"{TIME}  " + "%2.6f\n" % (PC))
+
+def saveNM( DYN_PROPERTIES ):
+    if ( DYN_PROPERTIES["MD_STEP"] == 0 ):
+        if ( os.path.exists("MD_OUTPUT") ): 
+            sp.call("rm -r MD_OUTPUT", shell=True)
+        sp.call("mkdir MD_OUTPUT", shell=True)
+    w = DYN_PROPERTIES["NM_FREQUENCIES"]
+    OUTPUT = np.array([w, w * 27.2114 * 1000, w * 27.2114 * 1000 / 0.123983])
+    np.savetxt("MD_OUTPUT/Normal_Mode_Frequencies.dat", OUTPUT.T, fmt='%2.6f', header="a.u., meV, cm^-1")
+
+    U      = DYN_PROPERTIES["NM_WAVEFUNCTIONS"]
+    COORDS = DYN_PROPERTIES["Atom_coords_new"] * 0.529 # Convert to Angstroms
+    with open("MD_OUTPUT/Normal_Mode_Wavefunctions.dat","w") as file01:
+        for m in range( len(U[0,0,:]) ):
+            file01.write("Mode %d FREQ = %1.4f cm^-1\n" % (m+1, w[m]* 27.2114 * 1000 / 0.123983))
+            for at in range( len(U[:]) ):
+                file01.write(f"{COORDS[at,0]:2.5f} {COORDS[at,1]:2.5f} {COORDS[at,2]:2.5f}  {U[at,0,m]:2.5f} {U[at,1,m]:2.5f} {U[at,2,m]:2.5f}\n")
+            file01.write("\n")
+

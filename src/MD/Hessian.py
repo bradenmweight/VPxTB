@@ -3,6 +3,8 @@ import subprocess as sp
 import os
 import multiprocessing as mp
 
+import output
+
 def make_XYZ( LABELS, POS ):
     FILE01 = open("geometry.xyz","w")
     FILE01.write("%1.0f\n" % len(LABELS))
@@ -19,10 +21,11 @@ def get_Hessian( DYN_PROPERTIES ):
     TODO -- Add flag for do_POLARITON to get normal modes and frequencies while coupling to cavity
     """
 
-    LABELS     = DYN_PROPERTIES["Atom_labels"]
-    COORDS     = DYN_PROPERTIES["Atom_coords_new"]
-    NATOMS   = len(LABELS)
-    dR_num   = 0.001
+    LABELS = DYN_PROPERTIES["Atom_labels"]
+    COORDS = DYN_PROPERTIES["Atom_coords_new"]
+    M      = DYN_PROPERTIES["MASSES"]
+    NATOMS = len(LABELS)
+    dR_num = 0.001
 
     # Get Energy at Reference Geometry
     make_XYZ(LABELS, COORDS)
@@ -95,32 +98,34 @@ def get_Hessian( DYN_PROPERTIES ):
                     E_BB = float(E_BB.strip())
 
                     # Compute d^2E/dx^2 using central difference
-                    HESSIAN[at1,x1,at2,x2] = (E_FF - E_FB - E_BF + E_BB) / (4*dR_num**2)
+                    HESSIAN[at1,x1,at2,x2] = (E_FF - E_FB - E_BF + E_BB) / (4*dR_num**2) 
+                    # Weight Hessian by masses
+                    #HESSIAN[at1,x1,at2,x2] = HESSIAN[at1,x1,at2,x2] / np.sqrt(M[at1]*M[at2])
 
+    DYN_PROPERTIES["HESSIAN"] = HESSIAN
+
+    return DYN_PROPERTIES
+
+
+def get_Normal_Modes( DYN_PROPERTIES ):
     # Compute the mass-weighted Hessian
-    # k = m * w^2
-    M    = DYN_PROPERTIES["MASSES"]
-    print("Masses (a.u.):", M)
-    print("Masses (AMU):" , M*1.001/1836)
-    #H    = np.einsum("AjBk,A,B->AjBk", HESSIAN, 1/np.sqrt(M), 1/np.sqrt(M) )
+    # H = m * w^2 --> Hjk = 1/sqrt(mk) * w * 1/sqrt(mj)
+    HESSIAN = DYN_PROPERTIES["HESSIAN"] # SHAPE = (N,3,N,3)
+    NATOMS  = len(HESSIAN)
+    M      = DYN_PROPERTIES["MASSES"]
     for at1 in range(NATOMS):
         for x1 in range(3):
             for at2 in range(NATOMS):
                 for x2 in range(3):
-                    HESSIAN[at1,x1,at2,x2] /= np.sqrt(M[at1]*M[at2])
-    H    = HESSIAN.reshape( NATOMS,3, 3*NATOMS )
-    H    = HESSIAN.reshape( 3*NATOMS, 3*NATOMS )
-    w2, U = np.linalg.eigh( H )
-    w    = np.sqrt(w2)
-    print("meV\n"  , np.round(w * 27.2114 * 1000,3) )
-    print("cm^-1\n", np.round(w * 27.2114 * 1000 / 0.123983,3) )
+                    HESSIAN[at1,x1,at2,x2] = HESSIAN[at1,x1,at2,x2] / np.sqrt( M[at1]*M[at2] )
+    H       = HESSIAN.reshape( 3*NATOMS, 3*NATOMS ) # Convert to square matrix
+    w2, U   = np.linalg.eigh( H )
+    U       = U.reshape( (NATOMS,3,3*NATOMS) ) # Turn each mode into an xyz-vector per atom
+    w       = np.sqrt(w2)
 
-
-
-    #print( np.round(HESSIAN.reshape( 3*NATOMS, 3*NATOMS ) ,3) )
-    exit()
-    return HESSIAN
-
+    DYN_PROPERTIES["NM_FREQUENCIES"] = w
+    DYN_PROPERTIES["NM_WAVEFUNCTIONS"] = U # Should we un-mass weight these modes ?
+    return DYN_PROPERTIES
 
 
 
@@ -131,13 +136,13 @@ def main( DYN_PROPERTIES ):
         sp.call(f"mkdir {DYN_PROPERTIES['VPxTB_SCRATCH_PATH']}/EL_STRUCTURE", shell=True)
     os.chdir(f"{DYN_PROPERTIES['VPxTB_SCRATCH_PATH']}/EL_STRUCTURE")
 
-    DYN_PROPERTIES["HESSIAN"] = get_Hessian( DYN_PROPERTIES )
-    exit()
-    #DYN_PROPERTIES["FREQUENCIES"], DYN_PROPERTIES["NORMAL_MODES"] = get_Normal_Modes( DYN_PROPERTIES ) # TODO : This is not implemented yet.
-
-
+    DYN_PROPERTIES = get_Hessian( DYN_PROPERTIES )
+    DYN_PROPERTIES = get_Normal_Modes( DYN_PROPERTIES )
 
     os.chdir(f"{DYN_PROPERTIES['VPxTB_RUNNING_DIR']}")
+    output.saveNM( DYN_PROPERTIES )
+    exit()
+
 
     return DYN_PROPERTIES
 
