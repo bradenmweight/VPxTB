@@ -27,7 +27,6 @@ def get_numerical_gradients( DYN_PROPERTIES ):
     MU0        = DYN_PROPERTIES["DIPOLE"]
     LABELS     = DYN_PROPERTIES["Atom_labels"]
     COORDS     = DYN_PROPERTIES["Atom_coords_new"]
-    do_HESSIAN = DYN_PROPERTIES["do_HESSIAN"]
     NATOMS   = len(LABELS)
     dR_num   = 0.01
     E0       = 0.0
@@ -37,7 +36,8 @@ def get_numerical_gradients( DYN_PROPERTIES ):
     DIP_NUM  = np.zeros( (NATOMS,3,2,3) ) # N, xyz, Forward/backward, (MUx,MUy,MUz)
     DIP_GRAD = np.zeros( (NATOMS,3,3) )   # N, xyz, (MUx,MUy,MUz)
     if ( do_HESSIAN == True ):
-        E_NUM_NUM = np.zeros( (NATOMS,NATOMS,3,3,2) ) # N, N, xyz, FF/BB -- Only need E(x + h, y + h) and E(x - h, y - h) terms in addition to E_GRAD
+        HESS      = np.zeros( (NATOMS,NATOMS,3,3) ) # N, N, xyz, xyz -- Only need E(x + h, y + h) and E(x - h, y - h) terms in addition to E_GRAD
+        E_NUM_NUM = np.zeros( (NATOMS,NATOMS,3,3,2) ) # N, N, xyz, xyz, FF/BB -- Only need E(x + h, y + h) and E(x - h, y - h) terms in addition to E_GRAD
     
     # This set of loops in all we need for E_GRAD and MU_GRAD
     # All we do here is E(x+h) and MU(x+h)
@@ -61,19 +61,16 @@ def get_numerical_gradients( DYN_PROPERTIES ):
                     for at_2 in range( NATOMS ):
                         for d_2 in range( 3 ):
                             # Extract new energy
-                            COORDS_NUM[at_2,d_2] -= dR_num
+                            COORDS_NUM[at_2,d_2] = -dR_num * (pm==0) + dR_num * (pm==1) # Do same shift as above current pm
                             make_XYZ( LABELS, COORDS_NUM )
                             sp.call("xtb geometry.xyz > xtb.out", shell=True)
                             E = sp.check_output("grep 'TOTAL ENERGY' xtb.out | tail -n 1 | awk '{print $4}'", shell=True)
-                            E_NUM_NUM[at,at,d,d_2,0] = E
-                            COORDS_NUM[at_2,d_2] += 2 * dR_num
-                            make_XYZ( LABELS, COORDS_NUM )
-                            sp.call("xtb geometry.xyz > xtb.out", shell=True)
-                            E = sp.check_output("grep 'TOTAL ENERGY' xtb.out | tail -n 1 | awk '{print $4}'", shell=True)
-                            E_NUM_NUM[at,at,d,d_2,1] = E
+                            E_NUM_NUM[at,at_2,d,d_2,pm] = E
             # Central difference
             E_GRAD[at,d] = (E_NUM[at,d,1] - E_NUM[at,d,0]) / 2 / dR_num
             DIP_GRAD[at,d,:] = (DIP_NUM[at,d,1,:] - DIP_NUM[at,d,0,:]) / 2 / dR_num # (dx,dy,dz)
+
+
 
     print("I DID THE GRADIENTS.")
     exit()    
@@ -92,7 +89,7 @@ def get_numerical_gradients_parallel( at, Atom_labels, COORDS, do_HESSIAN ):
         for pm in range( 2 ):
             # Shift single DOF
             COORDS_NUM  = COORDS * 1.0
-            COORDS_NUM[at,d] += dR_num * (pm==0) - dR_num * (pm==1)
+            COORDS_NUM[at,d] += -dR_num * (pm==0) + dR_num * (pm==1)
             # Make XYZ file and run xTB
             make_XYZ( Atom_labels, COORDS_NUM )
             sp.call("xtb geometry.xyz > xtb.out", shell=True)
