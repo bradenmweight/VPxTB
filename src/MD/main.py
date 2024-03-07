@@ -10,17 +10,11 @@ import output
 import rotation
 import xTB
 import Hessian
+import xTB_OPT
 
 def main( ):
     DYN_PROPERTIES = read_input.read()
     DYN_PROPERTIES = read_input.initialize_MD_variables(DYN_PROPERTIES)
-
-    if ( DYN_PROPERTIES["do_HESSIAN"] == True ):
-        DYN_PROPERTIES = Hessian.main( DYN_PROPERTIES )
-        exit()
-        #output.save_Normal_Modes(DYN_PROPERTIES) # TODO: This is not implemented yet.
-        #exit()
-
 
     # Remove COM motion and angular velocity
     # Do we need to do this at every step. Probably should at least remove COM.
@@ -35,7 +29,15 @@ def main( ):
     # Initialize photon based on moolecular dipole. We have dipole here.
     if ( DYN_PROPERTIES["do_POLARITON"] == True ):
         DYN_PROPERTIES = polariton.initialize_Cavity( DYN_PROPERTIES )
-    
+
+
+
+    if ( DYN_PROPERTIES["do_HESSIAN"] == True ):
+        DYN_PROPERTIES = Hessian.main( DYN_PROPERTIES )
+    if ( DYN_PROPERTIES["do_OPT"] == True ):
+        DYN_PROPERTIES = xTB_OPT.main( DYN_PROPERTIES )
+
+
     output.save_data(DYN_PROPERTIES)
 
     # Start main MD loop

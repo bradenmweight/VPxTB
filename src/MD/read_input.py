@@ -29,7 +29,7 @@ def read():
 
         if ( len(t) == 2 ):
 
-            # Look for NSteps
+            # Look for do_HESSIAN
             if ( t[0].upper() == "do_HESSIAN".upper() ):
                 try:
                     if ( t[1].upper() in ["TRUE", "1"] ):
@@ -38,6 +38,17 @@ def read():
                         DYN_PROPERTIES["do_HESSIAN"] = False
                 except ValueError:
                     print(f"\t'HESSIAN' must be either (1,0) or (True, False): '{t[1]}'")
+                    exit()
+
+            # Look for do_OPT
+            if ( t[0].upper() == "do_OPT".upper() ):
+                try:
+                    if ( t[1].upper() in ["TRUE", "1"] ):
+                        DYN_PROPERTIES["do_OPT"] = True
+                    else:
+                        DYN_PROPERTIES["do_OPT"] = False
+                except ValueError:
+                    print(f"\t'do_OPT' must be either (1,0) or (True, False): '{t[1]}'")
                     exit()
 
             # Look for NSteps
@@ -340,6 +351,102 @@ def set_masses(Atom_labels):
         masses.append( masses_amu[at] )
     return np.array(masses) * mass_amu_to_au
 
+
+def set_Nuclear_Charges( Atom_labels ):
+    QN = np.zeros( (len(Atom_labels)) )
+
+    QN_DICT = \
+{"H":   1,
+"He":	1,
+"Li":	1,
+"Be":	1,
+"B":    1,
+"C":    1,
+"N":    1,
+"O":    1,
+"F":    1,
+"Ne":	1,
+"Na":	1,
+"Mg":	1,
+"Al":	1,
+"Si":	1,
+"P":    1,
+"S":    1,
+"Cl":	1,
+"K":    1,
+"Ar":	1,
+"Ca":	1,
+"Sc":	1,
+"Ti":	1,
+"V":    1,
+"Cr":	1,
+"Mn":	1,
+"Fe":	1,
+"Ni":	1,
+"Co":	1,
+"Cu":	1,
+"Zn":	1,
+"Ga":	1,
+"Ge":	1,
+"As":	1,
+"Se":	1,
+"Br":	1,
+"Kr":	1,
+"Rb":	1,
+"Sr":	1,
+"Y":    1,
+"Zr":	1,
+"Nb":	1,
+"Mo":	1,
+"Ru":	1,
+"Rh":	1,
+"Pd":	1,
+"Ag":	1,
+"Cd":	1,
+"In":	1,
+"Sn":	1,
+"Sb":	1,
+"I":    1,
+"Te":	1,
+"Xe":	1,
+"Cs":	1,
+"Ba":	1,
+"La":	1,
+"Ce":	1,
+"Pr":	1,
+"Nd":	1,
+"Sm":	1,
+"Eu":	1,
+"Gd":	1,
+"Tb":	1,
+"Dy":	1,
+"Ho":	1,
+"Er":	1,
+"Tm":	1,
+"Yb":	1,
+"Lu":	1,
+"Hf":	1,
+"Ta":	1,
+"W":    1,
+"Re":	1,
+"Os":	1,
+"Ir":	1,
+"Pt":	1,
+"Au":	1,
+"Hg":	1,
+"Tl":	1,
+"Pb":	1,
+"Bi":	1,
+"Ra":	1}
+
+    counter = 1
+    for key,item in QN_DICT.items():
+        QN_DICT[key] = counter
+        counter += 1
+    for at,atom in enumerate(Atom_labels):
+        QN[at] = QN_DICT[atom]
+    return QN
+
 def get_initial_velocs(DYN_PROPERTIES):
     
     Atom_labels = DYN_PROPERTIES["Atom_labels"]
@@ -376,6 +483,7 @@ def initialize_MD_variables(DYN_PROPERTIES):
     DYN_PROPERTIES["NAtoms"] = len( DYN_PROPERTIES["Atom_labels"] )
     DYN_PROPERTIES["MASSES"] = set_masses(DYN_PROPERTIES["Atom_labels"])
     DYN_PROPERTIES["Atom_velocs_new"] = get_initial_velocs(DYN_PROPERTIES)
+    DYN_PROPERTIES["QN"] = set_Nuclear_Charges( DYN_PROPERTIES["Atom_labels"] )
 
     try:
         tmp = DYN_PROPERTIES["NCPUS"]
@@ -470,8 +578,12 @@ def initialize_MD_variables(DYN_PROPERTIES):
     try:
         tmp = DYN_PROPERTIES["do_HESSIAN"]
     except KeyError:
-        DYN_PROPERTIES["do_HESSIAN"] = False # Default is not to compute the Hessian at each step
+        DYN_PROPERTIES["do_HESSIAN"] = False # Default is not to compute the Hessian
 
+    try:
+        tmp = DYN_PROPERTIES["do_OPT"]
+    except KeyError:
+        DYN_PROPERTIES["do_OPT"] = False # Default is not to compute the optimization
 
 
     print("Input looks good.")

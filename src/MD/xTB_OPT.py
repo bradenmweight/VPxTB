@@ -186,7 +186,6 @@ def main( DYN_PROPERTIES ):
     DYN_PROPERTIES = optimize( DYN_PROPERTIES )
 
     os.chdir(f"{DYN_PROPERTIES['VPxTB_RUNNING_DIR']}")
-    #output.saveNM( DYN_PROPERTIES )
     exit()
 
 
