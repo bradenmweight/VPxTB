@@ -22,29 +22,62 @@ def run_xTB_SinglePoint( DYN_PROPERTIES ):
     sp.call("xtb geometry.xyz --grad > xtb.out", shell=True)
 
 
-def get_numerical_gradient( LABELS, COORDS ):
-    NATOMS = len(LABELS)
-    dR_num = 0.01
-    DIP_NUM  = np.zeros( (NATOMS,3,2,3) ) # Forward/backward, (MUx,MUy,MUz)
-    DIP_GRAD = np.zeros( (NATOMS,3,3) )
+def get_numerical_gradients( DYN_PROPERTIES ):
+    E0         = DYN_PROPERTIES["ENERGY_NEW"]
+    MU0        = DYN_PROPERTIES["DIPOLE"]
+    LABELS     = DYN_PROPERTIES["Atom_labels"]
+    COORDS     = DYN_PROPERTIES["Atom_coords_new"]
+    NATOMS   = len(LABELS)
+    dR_num   = 0.01
+    E0       = 0.0
+    MU0      = np.zeros( (3) )
+    E_NUM    = np.zeros( (NATOMS,3,2) )   # N, xyz, Forward/backward
+    E_GRAD   = np.zeros( (NATOMS,3) )     # N, xyz
+    DIP_NUM  = np.zeros( (NATOMS,3,2,3) ) # N, xyz, Forward/backward, (MUx,MUy,MUz)
+    DIP_GRAD = np.zeros( (NATOMS,3,3) )   # N, xyz, (MUx,MUy,MUz)
+    if ( do_HESSIAN == True ):
+        HESS      = np.zeros( (NATOMS,NATOMS,3,3) ) # N, N, xyz, xyz -- Only need E(x + h, y + h) and E(x - h, y - h) terms in addition to E_GRAD
+        E_NUM_NUM = np.zeros( (NATOMS,NATOMS,3,3,2) ) # N, N, xyz, xyz, FF/BB -- Only need E(x + h, y + h) and E(x - h, y - h) terms in addition to E_GRAD
+    
+    # This set of loops in all we need for E_GRAD and MU_GRAD
+    # All we do here is E(x+h) and MU(x+h)
     for at in range( NATOMS ):
         for d in range( 3 ):
             for pm in range( 2 ):
                 # Shift single DOF
                 COORDS_NUM  = COORDS
-                Atom_labels = LABELS
-                COORDS_NUM[at,d] += dR_num * (pm==0) - dR_num * (pm==1)
+                COORDS_NUM[at,d] += -dR_num * (pm==0) + dR_num * (pm==1)
                 # Make XYZ file and run xTB
-                make_XYZ( Atom_labels, COORDS_NUM )
+                make_XYZ( LABELS, COORDS_NUM )
                 sp.call("xtb geometry.xyz > xtb.out", shell=True)
+                # Extract new energy
+                E = sp.check_output("grep 'TOTAL ENERGY' xtb.out | tail -n 1 | awk '{print $4}'", shell=True)
+                E_NUM[at,d,pm] = E
                 # Extract new dipole
                 sp.call("grep 'molecular dipole' xtb.out -A 3 | tail -n 1 | awk '{print $2, $3, $4}' > DIPOLE.dat", shell=True)
                 DIP_NUM[at,d,pm,:] = np.loadtxt("DIPOLE.dat") #/ 2.5 # (dx,dy,dz) # ALREADY IN a.u.
+                if ( do_HESSIAN == True ):
+                    # E(x + h, y + h) and E(x - h, y - h) terms
+                    for at_2 in range( NATOMS ):
+                        for d_2 in range( 3 ):
+                            # Extract new energy
+                            COORDS_NUM[at_2,d_2] = -dR_num * (pm==0) + dR_num * (pm==1) # Do same shift as above current pm
+                            make_XYZ( LABELS, COORDS_NUM )
+                            sp.call("xtb geometry.xyz > xtb.out", shell=True)
+                            E = sp.check_output("grep 'TOTAL ENERGY' xtb.out | tail -n 1 | awk '{print $4}'", shell=True)
+                            E_NUM_NUM[at,at_2,d,d_2,pm] = E
             # Central difference
+            E_GRAD[at,d] = (E_NUM[at,d,1] - E_NUM[at,d,0]) / 2 / dR_num
             DIP_GRAD[at,d,:] = (DIP_NUM[at,d,1,:] - DIP_NUM[at,d,0,:]) / 2 / dR_num # (dx,dy,dz)
+
+
+
+    print("I DID THE GRADIENTS.")
+    exit()    
+
     return DIP_GRAD
 
-def get_numerical_gradient_parallel( at, Atom_labels, COORDS ):
+def get_numerical_gradients_parallel( at, Atom_labels, COORDS, do_HESSIAN ):
     sp.call(f"rm -r TMP_{at}", shell=True)
     sp.call(f"mkdir TMP_{at}", shell=True)
     os.chdir(f"TMP_{at}")
@@ -56,7 +89,7 @@ def get_numerical_gradient_parallel( at, Atom_labels, COORDS ):
         for pm in range( 2 ):
             # Shift single DOF
             COORDS_NUM  = COORDS * 1.0
-            COORDS_NUM[at,d] += dR_num * (pm==0) - dR_num * (pm==1)
+            COORDS_NUM[at,d] += -dR_num * (pm==0) + dR_num * (pm==1)
             # Make XYZ file and run xTB
             make_XYZ( Atom_labels, COORDS_NUM )
             sp.call("xtb geometry.xyz > xtb.out", shell=True)
@@ -93,14 +126,14 @@ def get_Properties( DYN_PROPERTIES ):
 
     # Get GS dipole gradient -- numerical gradient is expensive
     if ( DYN_PROPERTIES["do_POLARITON"] == True ): # Are we even including polaritonic effects ?
-        if ( DYN_PROPERTIES["PARALLEL_GRADIENT"] == True ):
+        if ( DYN_PROPERTIES["PARALLEL_GRADIENT"] == True ): # Can we do it in parallel ?
             DYN_PROPERTIES["DIP_GRAD"] = np.zeros( (NATOMS,3,3) )
-            LIST = [ [at, DYN_PROPERTIES["Atom_labels"], DYN_PROPERTIES["Atom_coords_new"]] for at in range( NATOMS ) ]
+            LIST = [ [at, DYN_PROPERTIES["Atom_labels"], DYN_PROPERTIES["Atom_coords_new"], False] for at in range( NATOMS ) ]
             with mp.Pool(processes=DYN_PROPERTIES["NCPUS"]) as pool:
-                DIP_GRAD = pool.starmap(get_numerical_gradient_parallel, LIST )
+                DIP_GRAD = pool.starmap(get_numerical_gradients_parallel, LIST )
             DYN_PROPERTIES["DIP_GRAD"] += np.array( DIP_GRAD )
         else:
-            DIP_GRAD = get_numerical_gradient( DYN_PROPERTIES["Atom_labels"], DYN_PROPERTIES["Atom_coords_new"] )
+            DIP_GRAD = get_numerical_gradients( DYN_PROPERTIES )
             DYN_PROPERTIES["DIP_GRAD"] = DIP_GRAD
     else:
         DYN_PROPERTIES["DIP_GRAD"] = np.zeros( (NATOMS,3,3) )

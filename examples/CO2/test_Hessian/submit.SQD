@@ -1,0 +1,24 @@
+#!/bin/bash
+#SBATCH -p action
+#SBATCH -J VPxTB
+#SBATCH -o output.slurm
+#SBATCH --mem 1GB
+#SBATCH -t 1-00:00:00
+#SBATCH -N 1
+#SBATCH --ntasks-per-node=1
+
+export VPxTB_HOME="/scratch/bweight/software/VPxTB/"
+export VPxTB_SCRATCH="/local_scratch/$SLURM_JOB_ID/" # Location where electronic structure jobs will be run
+#export VPxTB_SCRATCH="./" # Location where electronic structure jobs will be run
+
+echo "Setting paths in slurm:"
+echo "  VPxTB_HOME      = $VPxTB_HOME"
+echo "  VPxTB_SCRATCH   = $VPxTB_SCRATCH"
+
+export OMP_NUM_THREADS=1
+export MKL_NUM_THREADS=1
+
+python3 $VPxTB_HOME/src/MD/main.py > MD.out
+
+
+

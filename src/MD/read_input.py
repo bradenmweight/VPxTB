@@ -30,6 +30,17 @@ def read():
         if ( len(t) == 2 ):
 
             # Look for NSteps
+            if ( t[0].upper() == "do_HESSIAN".upper() ):
+                try:
+                    if ( t[1].upper() in ["TRUE", "1"] ):
+                        DYN_PROPERTIES["do_HESSIAN"] = True
+                    else:
+                        DYN_PROPERTIES["do_HESSIAN"] = False
+                except ValueError:
+                    print(f"\t'HESSIAN' must be either (1,0) or (True, False): '{t[1]}'")
+                    exit()
+
+            # Look for NSteps
             if ( t[0].upper() == "nsteps".upper() ):
                 try:
                     DYN_PROPERTIES["NSteps"] = int( t[1] )
@@ -426,7 +437,7 @@ def initialize_MD_variables(DYN_PROPERTIES):
             tmp = DYN_PROPERTIES["TEMP"]
         except KeyError:
             assert(False), f"\t'TEMP' needs to be defined if 'MD_ENSEMBLE' = {DYN_PROPERTIES['MD_ENSEMBLE']}"
-    
+
     elif ( DYN_PROPERTIES["MD_ENSEMBLE"] == "NVE" ):
         try:
             tmp = DYN_PROPERTIES["NVT_TYPE"]
@@ -456,7 +467,10 @@ def initialize_MD_variables(DYN_PROPERTIES):
     except KeyError:
         DYN_PROPERTIES["DATA_SAVE_FREQ"] = 1 # Default is to save every step. Might make large output files for NVT
 
-
+    try:
+        tmp = DYN_PROPERTIES["do_HESSIAN"]
+    except KeyError:
+        DYN_PROPERTIES["do_HESSIAN"] = False # Default is not to compute the Hessian at each step
 
 
 

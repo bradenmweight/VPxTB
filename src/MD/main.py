@@ -9,10 +9,18 @@ import polariton
 import output
 import rotation
 import xTB
+import Hessian
 
 def main( ):
     DYN_PROPERTIES = read_input.read()
     DYN_PROPERTIES = read_input.initialize_MD_variables(DYN_PROPERTIES)
+
+    if ( DYN_PROPERTIES["do_HESSIAN"] == True ):
+        DYN_PROPERTIES = Hessian.main( DYN_PROPERTIES )
+        exit()
+        #output.save_Normal_Modes(DYN_PROPERTIES) # TODO: This is not implemented yet.
+        #exit()
+
 
     # Remove COM motion and angular velocity
     # Do we need to do this at every step. Probably should at least remove COM.
