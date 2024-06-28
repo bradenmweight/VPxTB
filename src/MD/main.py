@@ -9,8 +9,6 @@ import polariton
 import output
 import rotation
 import xTB
-import Hessian
-import xTB_OPT
 
 def main( ):
     DYN_PROPERTIES = read_input.read()
@@ -29,15 +27,7 @@ def main( ):
     # Initialize photon based on moolecular dipole. We have dipole here.
     if ( DYN_PROPERTIES["do_POLARITON"] == True ):
         DYN_PROPERTIES = polariton.initialize_Cavity( DYN_PROPERTIES )
-
-
-
-    if ( DYN_PROPERTIES["do_HESSIAN"] == True ):
-        DYN_PROPERTIES = Hessian.main( DYN_PROPERTIES )
-    if ( DYN_PROPERTIES["do_OPT"] == True ):
-        DYN_PROPERTIES = xTB_OPT.main( DYN_PROPERTIES )
-
-
+    
     output.save_data(DYN_PROPERTIES)
 
     # Start main MD loop
