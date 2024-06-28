@@ -39,6 +39,24 @@ WC                = 0.1 # eV
 EPOL              = 111 # Three positive integers
 ```
 
+### Molecular Hessian (Polariton Effects: Yes,  Polariton Cavity Mode: No)
+```
+NSTEPS            = 0 # Total MD steps [int]
+dtI               = 0.10 # Nuclear time-step (fs) [float]
+CHARGE            = 0 # System's net charge [int]
+MD_ENSEMBLE       = NVE
+VELOC             = READ # "READ" -- from 'velocity_input.xyz' "ZERO" "MB" -- Maxwell-Boltzmann
+DATA_SAVE_FREQ    = 10
+do_HESSIAN        = True
+
+
+do_POLARITON      = True
+A0                = 0.2
+WC                = .24000 # eV
+EPOL              = 001 # Three positive integers
+```
+
+
 ### SLURM Submission Script
 ```
 #!/bin/bash

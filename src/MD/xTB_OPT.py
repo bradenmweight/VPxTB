@@ -26,11 +26,14 @@ def read_Dipole( LABELS, COORDS, QN ):
     CHARGES = np.loadtxt("charges")
     DIPOLE = np.zeros(3)
     for at in range( len(LABELS) ):
-        print("q, Q, R", -CHARGES[at], QN[at], COORDS[at,:])
-        DIPOLE += (CHARGES[at]-1) * COORDS[at,:]
+        print("dq, Q, R", -CHARGES[at], QN[at], COORDS[at,:])
+        # These are partial charges, so we may not need the QN at all.
+        DIPOLE += CHARGES[at] * COORDS[at,:]
+        print( DIPOLE )
 
     print("DIPOLE (OLD)", DIPOLE_OLD)
     print("DIPOLE (NEW)", DIPOLE)
+    print("RATIO:", (DIPOLE/DIPOLE_OLD)[-1], (DIPOLE_OLD/DIPOLE)[-1])
     exit()
     return DIPOLE
 

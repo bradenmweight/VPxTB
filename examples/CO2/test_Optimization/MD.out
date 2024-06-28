@@ -1,0 +1,17 @@
+MANDATORY INPUT VARIABLES:
+  NSteps =
+		 0
+  dtI =
+		 0.1 (fs)
+  CHARGE =
+		 0
+  MD_ENSEMBLE =
+		 NVE
+  VELOC =
+		 READ
+  do_POLARITON =
+		 True
+  A0 =
+		 0.2 a.u.
+  WC =
+		 0.24 eV

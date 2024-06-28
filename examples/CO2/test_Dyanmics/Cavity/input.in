@@ -6,6 +6,6 @@ VELOC            = READ # "READ" -- from 'velocity_input.xyz' "ZERO" "MB" -- Max
 DATA_SAVE_FREQ   = 10
 
 do_POLARITON      = True
-A0                = 0.01
-WC                = .24000 # eV
+A0                = 0.1
+WC                = .25300 # eV
 EPOL              = 001 # Three positive integers
