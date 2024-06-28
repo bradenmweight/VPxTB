@@ -1,0 +1,11 @@
+set xlabel 'Time (fs)'
+set ylabel 'Total Energy (a.u.)'
+p "No_Cavity/MD_OUTPUT/Energy.dat" u ($1*0.5):($4+3.060783) title 'No Cavity' @wl
+rep "Cavity/MD_OUTPUT/Energy.dat" u ($1*0.5):($4+3.029082) title 'Cavity' @wl
+rep "Cavity/MD_OUTPUT/QC.dat" u ($1*0.5):($2/8000) title 'QC' @wp
+rep "Cavity/MD_OUTPUT/PC.dat" u ($1*0.5):($2/500) title 'PC' @wp
+rep "Cavity/MD_OUTPUT/Dipole.dat" u ($1*0.5):($2/10) title 'DIPOLE' @wp
+set xrange[0:500]
+@see
+while (1) {@see; pause 5}
+

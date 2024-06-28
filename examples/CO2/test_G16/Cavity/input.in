@@ -1,0 +1,15 @@
+NSTEPS           = 2000  # Total MD steps [int]
+dtI              = 0.5 # Nuclear time-step (fs) [float]
+CHARGE           = 0 # System's net charge [int]
+MD_ENSEMBLE      = NVE
+VELOC            = READ # "READ" -- from 'velocity_input.xyz' "ZERO" "MB" -- Maxwell-Boltzmann
+DATA_SAVE_FREQ   = 1
+
+EL_PACKAGE        = G16
+
+do_POLARITON      = True
+A0                = 0.33
+WC                = .25300 # eV
+EPOL              = 001 # Three positive integers
+PARALLEL_GRADIENT = True
+NCPUS             = 3 # Can set to number of atoms

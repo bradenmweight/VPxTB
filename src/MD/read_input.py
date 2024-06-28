@@ -66,6 +66,13 @@ def read():
                 DYN_PROPERTIES["VELOC"] = t[1].upper()
                 # Later, we will check this input.
 
+            # Look for EL_PACKAGE
+            if ( t[0].upper() == "EL_PACKAGE".upper() ):
+                if ( t[1].upper()[0] == "G" ): # Choose Gaussian16
+                    DYN_PROPERTIES["EL_PACKAGE"] = "G16"
+                else:
+                    DYN_PROPERTIES["EL_PACKAGE"] = "XTB"
+
             # Look for PARALLEL_GRADIENT
             if ( t[0].upper() == "PARALLEL_GRADIENT".upper() ):
                 try:
@@ -233,7 +240,7 @@ def read_veloc():
     Atom_velocs_new = np.zeros(( NAtoms, 3 ))
     for count, line in enumerate(XYZ_File[2:]):
         t = line.split()
-        Atom_velocs_new[count,:] = np.array([ float(t[1]), float(t[2]), float(t[3]) ]) / 0.529 / 41.341 # Ang -> a.u.
+        Atom_velocs_new[count,:] = np.array([ float(t[1]), float(t[2]), float(t[3]) ]) / 0.529 / 41.341 # Ang/fs -> Bohr/a.u.t.
 
     return Atom_velocs_new
 
@@ -457,6 +464,23 @@ def initialize_MD_variables(DYN_PROPERTIES):
         DYN_PROPERTIES["DATA_SAVE_FREQ"] = 1 # Default is to save every step. Might make large output files for NVT
 
 
+    try:
+        tmp = DYN_PROPERTIES["MEMORY"]
+    except KeyError:
+        #print("Setting memory to 1 GB.")
+        DYN_PROPERTIES["MEMORY"] = 1
+        
+    try:
+        tmp = DYN_PROPERTIES["MULTIPLICITY"]
+    except KeyError:
+        #print("Setting MULTIPLICITY to 1.")
+        DYN_PROPERTIES["MULTIPLICITY"] = 1
+
+    try:
+        tmp = DYN_PROPERTIES["EL_PACKAGE"]
+    except KeyError:
+        # Choose Gaussian16
+        DYN_PROPERTIES["EL_PACKAGE"] = "G16"
 
 
 
