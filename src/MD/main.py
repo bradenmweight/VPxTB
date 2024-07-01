@@ -8,22 +8,22 @@ import nuclear_propagation
 import polariton
 import output
 import rotation
-import xTB
+import electronic_structure
 
 def main( ):
     DYN_PROPERTIES = read_input.read()
     DYN_PROPERTIES = read_input.initialize_MD_variables(DYN_PROPERTIES)
 
     # Remove COM motion and angular velocity
-    # Do we need to do this at every step. Probably should at least remove COM.
+    # Do we need to do this at every step ? Probably not. Here, we will do just at the beginning.
     #if ( DYN_PROPERTIES["REMOVE_COM_MOTION"] == True ):
-    #    DYN_PROPERTIES = rotation.shift_COM(DYN_PROPERTIES)
+    #   DYN_PROPERTIES = rotation.shift_COM(DYN_PROPERTIES)
     #if ( DYN_PROPERTIES["REMOVE_ANGULAR_VELOCITY"] == True ):
     #    DYN_PROPERTIES = rotation.remove_rotations(DYN_PROPERTIES)
 
     # Perform first electronic structure calculation
         # Get diagonal energies and gradients
-    DYN_PROPERTIES = xTB.main(DYN_PROPERTIES)
+    DYN_PROPERTIES = electronic_structure.main(DYN_PROPERTIES)
     # Initialize photon based on moolecular dipole. We have dipole here.
     if ( DYN_PROPERTIES["do_POLARITON"] == True ):
         DYN_PROPERTIES = polariton.initialize_Cavity( DYN_PROPERTIES )
@@ -43,7 +43,7 @@ def main( ):
             # Get diagonal energies and grad
         DYN_PROPERTIES["MD_STEP"] += 1 # This needs to be exactly here for technical reasons.
         T0 = time()
-        DYN_PROPERTIES = xTB.main(DYN_PROPERTIES)
+        DYN_PROPERTIES = electronic_structure.main(DYN_PROPERTIES)
         print( "Total QM took %2.2f s." % (time() - T0) )
 
         # Propagate nuclear momenta
